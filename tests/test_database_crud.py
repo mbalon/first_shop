@@ -27,6 +27,29 @@ def populate_db():
                            price=3000, description='to work'))
 
 
+def test_get_producers_endpoint_returns_status_code_200_ok(client):
+    response = client.get("/get_producers")
+    assert response.status_code == 200
+
+
 def test_add_producer_endpoint_returns_status_code_200_ok(client):
     response = client.post("/add_producer", json={"id": 3, "name": "HP"})
     assert response.status_code == 200
+
+
+def test_add_producer_endpoint_add_new_record_to_db(client, app):
+    with app.app_context():
+        populate_db()
+
+        client.post("/add_producer", json={"id": 3, "name": "HP"})
+
+    excepted_list = [
+        {"id": 1, "name": "Dell"},
+        {"id": 2, "name": "Lenovo"},
+        {"id": 3, "name": "HP"}
+    ]
+
+    response = client.get("/get_producers")
+
+    actual_list = sorted(response.json, key=lambda producer: producer["id"])
+    assert actual_list == excepted_list
